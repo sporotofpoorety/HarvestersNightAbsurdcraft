@@ -1,0 +1,89 @@
+package lykrast.harvestersnight.client;
+
+
+import lykrast.harvestersnight.common.EntityHarvester;
+import lykrast.harvestersnight.common.HarvestersNight;
+
+import net.minecraft.client.renderer.entity.RenderBiped;
+import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.Vec3d;
+
+
+
+
+public class RenderHarvester extends RenderBiped<EntityHarvester> 
+{
+	public static final ResourceLocation TEXTURES = new ResourceLocation(HarvestersNight.MODID, "textures/entity/harvester.png"),
+			EYES = new ResourceLocation(HarvestersNight.MODID, "textures/entity/harvester_eyes.png");
+
+	public RenderHarvester(RenderManager rendermanagerIn) 
+    {
+		super(rendermanagerIn, new ModelHarvester(), 0.5F);
+        addLayer(new LayerEyesHarvester(this));
+	}
+
+	@Override
+	protected ResourceLocation getEntityTexture(EntityHarvester entity) 
+    {
+		return TEXTURES;
+	}
+
+//Testing clone
+    public void doRender(EntityHarvester entity, double x, double y, double z, float entityYaw, float partialTicks)
+    {
+/*
+        super.doRender(entity, x, y, z, entityYaw, partialTicks);
+
+//Check for offset and should render clone or not
+        Vec3d targetOffset = entity.getTargetPos();
+
+
+//Tryina render clone
+        if(targetOffset.x < 300.0D)
+        {
+            float actualYaw = entityYaw + 180.0F;
+                if(actualYaw >= 360.0F) { actualYaw -= 360.0F; }
+
+            super.doRender(entity, x + (targetOffset.x * 2.0D), y, z + (targetOffset.z * 2.0D), actualYaw, partialTicks);
+        }
+*/
+
+
+        super.doRender(entity, x, y, z, entityYaw, partialTicks);
+
+        Vec3d targetOffset = entity.getTargetPos();
+
+        if (targetOffset.x < 300.0D)
+        {
+//Save original rotation
+            float savedRenderYaw = entity.renderYawOffset;
+            float savedPrevRenderYaw = entity.prevRenderYawOffset;
+            float savedHeadYaw = entity.rotationYawHead;
+            float savedPrevHeadYaw = entity.prevRotationYawHead;
+
+//Flip clone rotation
+            entity.renderYawOffset += 180.0F;
+            entity.prevRenderYawOffset += 180.0F;
+            entity.rotationYawHead += 180.0F;
+            entity.prevRotationYawHead += 180.0F;
+
+//Render clone
+            super.doRender(entity, x + (targetOffset.x * 2.0D), y + (targetOffset.y * 2.0D), z + (targetOffset.z * 2.0D), entityYaw + 180.0F, partialTicks);
+
+//Restore rotation
+            entity.renderYawOffset = savedRenderYaw;
+            entity.prevRenderYawOffset = savedPrevRenderYaw;
+            entity.rotationYawHead = savedHeadYaw;
+            entity.prevRotationYawHead = savedPrevHeadYaw;
+        }
+    }
+
+
+/*
+    protected boolean isVisible(EntityHarvester p_193115_1_)
+    {
+        return true;
+    }
+*/
+}
