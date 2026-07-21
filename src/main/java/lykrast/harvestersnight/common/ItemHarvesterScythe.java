@@ -21,6 +21,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.network.play.client.CPacketPlayerDigging;
 import net.minecraft.network.play.server.SPacketBlockChange;
+import net.minecraft.network.play.server.SPacketSoundEffect;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumActionResult;
@@ -33,11 +34,12 @@ import net.minecraft.world.World;
 
 import net.minecraftforge.common.ForgeHooks;
 
-//import com.deeperdepths.common.DeeperDepths;
+import com.deeperdepths.common.DeeperDepths;
 
 import org.sporotofpoorety.eternitymode.core.EternityModeSoundEvents;
 import org.sporotofpoorety.eternitymode.entity.EntityDemonScythe;
 import org.sporotofpoorety.eternitymode.interfacemixins.IMixinEntityMob;
+import org.sporotofpoorety.eternitymode.util.PacketUtil;
 import org.sporotofpoorety.eternitymode.util.PlayerMeleeUtil;
 
 
@@ -224,7 +226,6 @@ public class ItemHarvesterScythe extends ItemSword
 //Get player
             EntityPlayer player = (EntityPlayer) attacker;
 //Get attack charge
-//          float attackCharge = player.getCooledAttackStrength(0.5F);
             float attackCharge = PlayerMeleeUtil.getLatestCharge(player);
 //Get is crit
             boolean isCrit = PlayerMeleeUtil.isCriticalHit(player, target);
@@ -235,23 +236,34 @@ public class ItemHarvesterScythe extends ItemSword
             float spreadDamage = baseDamage * attackCharge * critMult * 0.5F;
 
 
-//Sharper and louder sound for crit
+//Crisper and louder sound for crit
             if(isCrit)
             {
+//Make sound packet
+                SPacketSoundEffect critScytheSound = new SPacketSoundEffect
+                    (EternityModeSoundEvents.ENTITY_SCYTHE_SWING, SoundCategory.PLAYERS, 
+                    player.posX, player.posY, player.posZ, 6.0F, 1.0F);
+//Send it
+                PacketUtil.sendPacketToNearbyPlayers(player.world, player.posX, player.posY, player.posZ, 32.0D, 
+                    critScytheSound);
 /*
-                player.world.playSound(null, player.posX, player.posY, player.posZ,
-                    EternityModeSoundEvents.ENTITY_SCYTHE_SWING, SoundCategory.PLAYERS, attackCharge * 10.0F, 1.5F);
-*/
-                player.playSound(EternityModeSoundEvents.ENTITY_SCYTHE_SWING, attackCharge * 10.0F, 1.5F);         
+                PlayerEffectsUtil.sendPacketToNearSound(player.world, player.posX, player.posY, player.posZ, 32.0D,
+                    EternityModeSoundEvents.ENTITY_SCYTHE_SWING, SoundCategory.PLAYERS, attackCharge * 6.0F, 1.0F); 
+*/        
             }
 //Normal sound
             else
             {
+                SPacketSoundEffect normalScytheSound = new SPacketSoundEffect
+                    (EternityModeSoundEvents.ENTITY_SCYTHE_SWING, SoundCategory.PLAYERS, 
+                    player.posX, player.posY, player.posZ, 4.5F, 1.5F);
+//Send it
+                PacketUtil.sendPacketToNearbyPlayers(player.world, player.posX, player.posY, player.posZ, 32.0D, 
+                    normalScytheSound);
 /*
-                player.world.playSound(null, player.posX, player.posY, player.posZ,
-                    EternityModeSoundEvents.ENTITY_SCYTHE_SWING, SoundCategory.PLAYERS, attackCharge * 8.0F, 1.5F);
-*/
-                player.playSound(EternityModeSoundEvents.ENTITY_SCYTHE_SWING, attackCharge * 8.0F, 1.0F);       
+                PlayerEffectsUtil.sendPacketToNearSound(player.world, player.posX, player.posY, player.posZ, 32.0D,
+                    EternityModeSoundEvents.ENTITY_SCYTHE_SWING, SoundCategory.PLAYERS, attackCharge * 4.5F, 1.5F);
+*/    
             }
 
 
@@ -277,12 +289,11 @@ public class ItemHarvesterScythe extends ItemSword
                     nearEntity.motionY += attackCharge * critMult * 0.5D;
                     nearEntity.motionZ += 2.0D * attackCharge * critMult * (nearEntity.posZ - attacker.posZ) / entityDistHorizontal;
 //And particle effect at respective entity edge
-                    for (int partAt = 0; partAt < 12; partAt++)
+                    for (int partAt = 0; partAt < 8; partAt++)
                     {
-                        EnumParticleTypes type = partAt < 8 ? EnumParticleTypes.EXPLOSION_LARGE : EnumParticleTypes.CLOUD;
-                        float range = 2.666F;
+                        float range = 1.777F;
 //Get angle to player
-                        double radiansToPlayer = Math.atan2(nearEntity.posZ - attacker.posZ, nearEntity.posX - attacker.posX);
+                        double radiansToPlayer = Math.atan2(attacker.posZ - nearEntity.posZ, attacker.posX -  nearEntity.posX);
                         double offsetX = Math.cos(radiansToPlayer) * ((nearEntity.width / 2.0D) + 0.0D);
                         double offsetZ = Math.sin(radiansToPlayer) * ((nearEntity.width / 2.0D) + 0.0D);
 //Get entity edge pointing to player
@@ -291,7 +302,7 @@ public class ItemHarvesterScythe extends ItemSword
                             = nearEntity.posY + (nearEntity.height / 2.0D) + (attacker.world.rand.nextFloat() * range - attacker.world.rand.nextFloat() * range) / 2.0D;
                         double edgeZ = nearEntity.posZ + offsetZ + (attacker.world.rand.nextFloat() * range - attacker.world.rand.nextFloat() * range);
 
-//                      DeeperDepths.proxy.spawnParticle(6, player.world, edgeX, edgeY, edgeZ, 0, 0, 0);
+                        DeeperDepths.proxy.spawnParticle(6, player.world, edgeX, edgeY, edgeZ, 0, 0, 0);
                     }
                 }
             }
@@ -315,12 +326,43 @@ public class ItemHarvesterScythe extends ItemSword
 		return EnumAction.BOW;
 	}
 
+//On right click
 	@Override
 	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand handIn) 
     {
-		ItemStack stack = playerIn.getHeldItem(handIn);
+//Set hand active
 		playerIn.setActiveHand(handIn);
+//Get this itemstack
+		ItemStack stack = playerIn.getHeldItem(handIn);
+//And set action successful
 		return new ActionResult<>(EnumActionResult.SUCCESS, stack);
+	}
+
+	@Override
+	public void onUpdate(ItemStack stack, World worldIn, Entity entityIn, int itemSlot, boolean isSelected) 
+    {
+//If hand active and hand is this item stack 
+		if (entityIn instanceof EntityLivingBase && ((EntityLivingBase) entityIn).isHandActive() && ((EntityLivingBase) entityIn).getActiveItemStack() == stack) 
+        {
+//If has been used for 20 ticks exactly
+			if(((EntityLivingBase)entityIn).getItemInUseMaxCount() == 20)
+            {
+//Particles
+                for (int particleAt = 0; particleAt < 1000; ++particleAt)
+                {
+                    entityIn.world.spawnParticle(EnumParticleTypes.PORTAL, 
+                    entityIn.posX + (entityIn.world.rand.nextDouble() - 0.5D) * 6.0D, 
+                    entityIn.posY + (entityIn.world.rand.nextDouble() - 0.5D) * 6.0D, 
+                    entityIn.posZ + (entityIn.world.rand.nextDouble() - 0.5D) * 6.0D, 
+                    (entityIn.world.rand.nextDouble() - 0.5D) * 2.0D, 
+                    -entityIn.world.rand.nextDouble(), 
+                    (entityIn.world.rand.nextDouble() - 0.5D) * 2.0D);
+                }
+//Warning sound
+                entityIn.world.playSound(null, entityIn.posX, entityIn.posY, entityIn.posZ,
+                    EternityModeSoundEvents.ENTITY_SCYTHE_DEMON, SoundCategory.PLAYERS, 6.0F, 1.0F);  
+            }
+		}
 	}
 
 	@Override
@@ -343,11 +385,8 @@ public class ItemHarvesterScythe extends ItemSword
 				    Vec3d playerLookDir = player.getLookVec();
 
 
-/*
                     player.world.playSound(null, player.posX, player.posY, player.posZ,
-                        EternityModeSoundEvents.ENTITY_SCYTHE_SWING, SoundCategory.NEUTRAL, 8.0F, 1.0F);
-*/
-                    player.playSound(EternityModeSoundEvents.ENTITY_SCYTHE_SWING, 10.0F, 1.5F);      
+                        EternityModeSoundEvents.ENTITY_SCYTHE_SWING, SoundCategory.PLAYERS, 6.0F, 1.0F);
 
 
                     EntityDemonScythe demonScythe = new EntityDemonScythe
@@ -359,7 +398,7 @@ public class ItemHarvesterScythe extends ItemSword
                     float meleeStrength = (float) player.getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getAttributeValue();
 //20-40 ticks but 20-30 effective
                     float effectiveChargeTicks = 20.0F + (0.5F * Math.min(usedTicks - 20, 20));
-                    demonScythe.damageVal = meleeStrength * (0.1F * effectiveChargeTicks);
+                    demonScythe.damageVal = meleeStrength * (0.08F * effectiveChargeTicks);
                     demonScythe.setMovement(playerLookDir.x, playerLookDir.y, playerLookDir.z, 
                         0.0D, false, 1.02D);
                     demonScythe.rotationYaw = player.rotationYaw;          

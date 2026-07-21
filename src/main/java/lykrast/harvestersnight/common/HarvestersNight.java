@@ -31,9 +31,10 @@ import net.minecraftforge.registries.IForgeRegistry;
 	name = HarvestersNight.NAME, 
 	version = HarvestersNight.VERSION, 
 	acceptedMinecraftVersions = "[1.12, 1.13)",
-    dependencies = "required-after:eternitymode")
+    dependencies = "required-after:eternitymode;required-after:deeperdepths")
 @Mod.EventBusSubscriber
-public class HarvestersNight {
+public class HarvestersNight 
+{
     public static final String MODID = "harvestersnight";
     public static final String NAME = "Harvester's Night";
     public static final String VERSION = "@VERSION@";
@@ -52,13 +53,14 @@ public class HarvestersNight {
 	@SubscribeEvent
 	public static void registerItems(RegistryEvent.Register<Item> event) 
     {
-//Only one item so inlining my usual helper functions
+//Add new tool material
 		harvesterMaterial = EnumHelper.addToolMaterial("harvester", 
-				ToolMaterial.IRON.getHarvestLevel(), 
+				ToolMaterial.DIAMOND.getHarvestLevel(), 
 				1323, 
-				ToolMaterial.IRON.getEfficiency(), 
-				ToolMaterial.IRON.getAttackDamage(), 
-				ToolMaterial.IRON.getEnchantability());
+				ToolMaterial.DIAMOND.getEfficiency(), 
+				6.0F, 
+				ToolMaterial.DIAMOND.getEnchantability());
+//Add item
 		harvesterScythe = new ItemHarvesterScythe(harvesterMaterial)
 				.setRegistryName(new ResourceLocation(MODID, "harvester_scythe"))
 				.setTranslationKey(MODID + ".harvester_scythe")
@@ -68,7 +70,8 @@ public class HarvestersNight {
 	
 	@SubscribeEvent
 	@SideOnly(Side.CLIENT)
-	public static void registerModels(ModelRegistryEvent evt) {
+	public static void registerModels(ModelRegistryEvent evt) 
+    {
 		ModelLoader.setCustomModelResourceLocation(harvesterScythe, 0, new ModelResourceLocation(harvesterScythe.getRegistryName(), "inventory"));
 	}
 	

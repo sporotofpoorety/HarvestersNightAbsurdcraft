@@ -42,6 +42,7 @@ import net.minecraft.world.World;
 
 import org.sporotofpoorety.eternitymode.entity.ai.EntityAIRelentlessTargetPlayers;
 import org.sporotofpoorety.eternitymode.interfacemixins.IMixinEntityLivingBase;
+import org.sporotofpoorety.eternitymode.util.RotationUtil;
 
 
 
@@ -68,7 +69,7 @@ public class EntityHarvester extends EntityMob
         moveHelper = new AIMoveControl(this);
 
         this.ignoreFrustumCheck = true;
-        ((IMixinEntityLivingBase) this).setHasAfterimages(true);
+//      ((IMixinEntityLivingBase) this).setHasAfterimages(true);
 	}
 
 
@@ -88,7 +89,7 @@ public class EntityHarvester extends EntityMob
 
 
         this.targetTasks.addTask(1, new EntityAIRelentlessTargetPlayers(this, 300.0D));
-    	this.targetTasks.addTask(2, new EntityAINearestAttackableTarget<EntityPlayer>(this, EntityPlayer.class, false));
+//    	this.targetTasks.addTask(2, new EntityAINearestAttackableTarget<EntityPlayer>(this, EntityPlayer.class, false));
         this.targetTasks.addTask(3, new EntityAIHurtByTarget(this, false, new Class[0]));
     }
 
@@ -168,12 +169,28 @@ public class EntityHarvester extends EntityMob
         }
 
 
-//Test clone
+//Test visual
 		if (!world.isRemote)
         {
             if(attackTarget != null)
             {
-                this.setTargetPos(new Vec3d(attackTarget.posX - this.posX, attackTarget.posY - this.posY, attackTarget.posZ - this.posZ));
+                if(this.getTargetPos().x > 9000.0D || (this.ticksExisted % 300 == 0))
+                {
+                    this.setTargetPos(new Vec3d(0.1D, 1.0D, 0.0D));
+                }
+                else
+                {
+                    Vec3d actualTargetDir = new Vec3d(attackTarget.posX - this.posX, attackTarget.posY - this.posY, attackTarget.posZ - this.posZ);
+
+                    Vec3d interpolatedDir = RotationUtil.rotateDirTowardsDir
+                    (
+                        this.getTargetPos(),
+                        actualTargetDir,
+                        0.02D * Math.PI   
+                    );
+
+                    this.setTargetPos(interpolatedDir);
+                }
             } 
             else
             {

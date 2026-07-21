@@ -4,10 +4,13 @@ package lykrast.harvestersnight.client;
 import lykrast.harvestersnight.common.EntityHarvester;
 import lykrast.harvestersnight.common.HarvestersNight;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderBiped;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.Vec3d;
+
+import org.sporotofpoorety.eternitymode.client.LaserRenderer;
 
 
 
@@ -32,30 +35,14 @@ public class RenderHarvester extends RenderBiped<EntityHarvester>
 //Testing clone
     public void doRender(EntityHarvester entity, double x, double y, double z, float entityYaw, float partialTicks)
     {
+        super.doRender(entity, x, y, z, entityYaw, partialTicks);
+
+        Vec3d targetOffset = entity.getTargetPos();
+
+
+        if (targetOffset.x < 3000.0D)
+        {
 /*
-        super.doRender(entity, x, y, z, entityYaw, partialTicks);
-
-//Check for offset and should render clone or not
-        Vec3d targetOffset = entity.getTargetPos();
-
-
-//Tryina render clone
-        if(targetOffset.x < 300.0D)
-        {
-            float actualYaw = entityYaw + 180.0F;
-                if(actualYaw >= 360.0F) { actualYaw -= 360.0F; }
-
-            super.doRender(entity, x + (targetOffset.x * 2.0D), y, z + (targetOffset.z * 2.0D), actualYaw, partialTicks);
-        }
-*/
-
-
-        super.doRender(entity, x, y, z, entityYaw, partialTicks);
-
-        Vec3d targetOffset = entity.getTargetPos();
-
-        if (targetOffset.x < 300.0D)
-        {
 //Save original rotation
             float savedRenderYaw = entity.renderYawOffset;
             float savedPrevRenderYaw = entity.prevRenderYawOffset;
@@ -76,6 +63,33 @@ public class RenderHarvester extends RenderBiped<EntityHarvester>
             entity.prevRenderYawOffset = savedPrevRenderYaw;
             entity.rotationYawHead = savedHeadYaw;
             entity.prevRotationYawHead = savedPrevHeadYaw;
+*/
+
+
+//TESTING LASER PLEASE WORK PLEASE
+//          Minecraft.getMinecraft().getTextureManager().bindTexture(LaserRenderer.DEFAULT_BEAM_TEXTURE);
+            Minecraft.getMinecraft().getTextureManager().bindTexture(new ResourceLocation("eternitymode:textures/lavamodern.png"));
+
+
+            LaserRenderer.renderLaser
+            (
+                x, y, z,
+                targetOffset.x, targetOffset.y, targetOffset.z,
+                20.0D,
+                2.0D,
+                4.0D,
+                2.0D, 2.5D,
+                1.0F, 1.0F, 1.0F,
+                0.125F,
+                entity.world.getTotalWorldTime(),
+                partialTicks,
+                1.0D,
+                40.0D,
+                20.0D
+            );
+
+//Might need this extra cleanup
+            this.setLightmap(entity);
         }
     }
 
